@@ -11,7 +11,8 @@
     "build": "npm run build -w client",
     "test": "npm run test -w server",
     "start": "npm run start -w server",
-    "test:browser": "node scripts/browser-check.mjs"
+    "test:browser": "node scripts/browser-check.mjs",
+    "test:print": "node scripts/print-check.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

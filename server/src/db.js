@@ -1,15 +1,32 @@
 import pg from "pg";
 import { readFile } from "node:fs/promises";
+export function poolOptions(env = process.env) {
+  let url;
+  try {
+    url = new URL(env.DATABASE_URL);
+  } catch {
+    throw new Error("DATABASE_URL must be a valid PostgreSQL connection URL.");
+  }
+  const neon = url.hostname.endsWith(".neon.tech");
+  if (neon || env.DATABASE_SSL === "true")
+    url.searchParams.set("sslmode", "verify-full");
+  return {
+    connectionString: url.toString(),
+    max: 3,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 30000,
+    enableChannelBinding: true,
+  };
+}
 export async function createDatabase() {
   if (process.env.DATABASE_URL) {
-    const pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 10,
-      ssl:
-        process.env.DATABASE_SSL === "true"
-          ? { rejectUnauthorized: true }
-          : undefined,
-    });
+    const pool = new pg.Pool(poolOptions());
+    // Sleeping databases may close idle connections; pg discards them and reconnects.
+    pool.on("error", () =>
+      console.warn(
+        "An idle database connection closed; the next request will reconnect.",
+      ),
+    );
     return {
       query: (...args) => pool.query(...args),
       transaction: async (fn) => {

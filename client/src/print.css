@@ -1,0 +1,206 @@
+.print-dialog {
+  width: min(760px, calc(100vw - 24px));
+  max-height: 90vh;
+  overflow: auto;
+  padding: 24px;
+  background: #e5e2da;
+  color: #470b08;
+  border: 1px solid #977d5a;
+  border-radius: 12px;
+}
+.print-dialog p {
+  line-height: 1.6;
+}
+.print-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+.print-dialog label {
+  display: block;
+  font-weight: 600;
+}
+.print-dialog select {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  white-space: normal;
+}
+.print-dialog button {
+  min-height: 44px;
+}
+#family-print-document {
+  display: none;
+}
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+@media print {
+  body.family-print-ready {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  body.family-print-ready > :not(#family-print-document) {
+    display: none !important;
+  }
+  body.family-print-ready #family-print-document {
+    display: block !important;
+    width: 186mm;
+    color: #111;
+    background: white;
+    font:
+      11pt/1.35 Arial,
+      sans-serif;
+  }
+}
+.family-print-page {
+  box-sizing: border-box;
+  min-height: 250mm;
+  display: flex;
+  flex-direction: column;
+  break-after: page;
+  page-break-after: always;
+  overflow: visible;
+}
+.family-print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.family-print-page header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1pt solid #444;
+  padding-bottom: 4mm;
+  font-size: 9pt;
+  letter-spacing: 0.5pt;
+}
+.family-print-page h1 {
+  font:
+    bold 24pt/1.25 Arial,
+    sans-serif;
+  margin: 12mm 0 5mm;
+  overflow-wrap: anywhere;
+}
+.family-print-page h2 {
+  font:
+    bold 16pt Arial,
+    sans-serif;
+  margin: 6mm 0 4mm;
+}
+.family-print-page h3 {
+  font:
+    bold 12pt Arial,
+    sans-serif;
+  margin: 3mm 0;
+}
+.family-print-page p {
+  font-size: 11pt;
+  line-height: 1.5;
+  margin: 3mm 0;
+}
+.family-print-page img {
+  width: 45mm;
+  height: auto;
+}
+.family-print-page footer {
+  margin-top: auto;
+  padding-top: 5mm;
+  border-top: 0.5pt solid #777;
+  font-size: 9pt;
+}
+.print-parents {
+  border: 1pt solid #444;
+  border-radius: 2mm;
+  padding: 3mm 4mm;
+}
+.print-person + .print-person {
+  margin-top: 3mm;
+  padding-top: 3mm;
+  border-top: 0.5pt solid #aaa;
+}
+.family-print-page strong {
+  display: block;
+  font-size: 12pt;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.family-print-page small {
+  display: block;
+  font-size: 10pt;
+  margin-top: 1mm;
+}
+.print-connector {
+  height: 5mm;
+  margin-left: 8mm;
+  border-left: 1pt solid #444;
+}
+.print-children {
+  margin: 0 0 5mm;
+  padding: 0;
+  list-style: none;
+}
+.print-children li {
+  display: flex;
+  gap: 3mm;
+  padding: 3mm 0;
+  border-top: 0.5pt solid #aaa;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.print-children li > div {
+  flex: 1;
+  min-width: 0;
+}
+.print-number {
+  font-size: 11pt;
+  min-width: 6mm;
+  padding-top: 0.5mm;
+}
+.print-reference {
+  display: block;
+  font-size: 10pt;
+  margin-top: 1mm;
+  overflow-wrap: anywhere;
+}
+.print-continue {
+  font-weight: bold;
+}
+
+.print-preview {
+  max-height: 55vh;
+  overflow: auto;
+  margin-top: 18px;
+  background: #cecdc7;
+  padding: 12px;
+  color: #111;
+  font:
+    11pt/1.35 Arial,
+    sans-serif;
+}
+.print-preview .family-print-page {
+  width: 210mm;
+  min-height: 274mm;
+  padding: 12mm;
+  background: white;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px #0002;
+}
+@media print {
+  .family-print-page {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+}
+
+@media print {
+  dialog::backdrop {
+    display: none !important;
+  }
+}

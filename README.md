@@ -12,7 +12,7 @@ First name, middle name, surname, suffix, and birthday are optional. Gender is r
 
 ## Shared, permanent storage
 
-Every person, partnership, and parent-child link is saved on the server in PostgreSQL. Cookies, local storage, and session storage are not used for family records. All deployed visitors use the same backend and database. The browser checks a database revision every 10 seconds while visible, and when returning to the tab; another visitor's changes appear automatically. Unsaved forms stay open during refreshes.
+Every person, partnership, and parent-child link is saved on the server in PostgreSQL. Cookies, local storage, and session storage are not used for family records. All deployed visitors use the same backend and database. The browser checks a database revision every 10 seconds while visible and recently active, and when returning to the tab; another visitor's changes appear automatically. Polling pauses after two minutes without interaction so unattended tabs can let Neon sleep. Interaction resumes polling. Unsaved forms stay open during refreshes.
 
 Production must use a managed PostgreSQL `DATABASE_URL`. Render's service filesystem is not used for production family storage. The optional local preview database is server-side PGlite with disk persistence, not a browser database; it is disabled in production.
 
@@ -40,19 +40,21 @@ npm run migrate -w server
 
 The idempotent schema upgrade and one-time heads migration run at API startup. They preserve existing member details and relationships. `.env`, local database files, dependencies, and test screenshots are ignored by Git.
 
-## Render backend + PostgreSQL
+## Free hosting: Neon + Render
 
-1. Push this project to your Git repository.
-2. Create a Render Blueprint from the repository. `render.yaml` defines a PostgreSQL database and Node web service. Review the declared paid plans before provisioning them.
-3. Set `FRONTEND_URL` to your exact Vercel origin without a trailing slash. Multiple trusted origins can be comma-separated.
-4. The Blueprint supplies `DATABASE_URL` from the managed database; Render supplies `PORT`. `NODE_ENV=production` requires the managed database.
-5. Verify `https://YOUR-API.onrender.com/api/health` returns `{"status":"ok"}` and `/api/heads` returns the two clan heads.
+1. Create a **Neon Free** project and copy its direct PostgreSQL URL from Connect (pooling off).
+2. Push the code to GitHub and create a Render Blueprint. `render.yaml` creates only a **Free web service**, with no Render database or paid disk.
+3. Supply the Neon URL as `DATABASE_URL`, and your Vercel origin as `FRONTEND_URL` (localhost temporarily until Vercel is ready). The Blueprint enables verified TLS and production mode.
+4. `/api/health` checks process liveness without querying Neon. `/api/heads` verifies database access. The pool uses at most three connections and releases idle connections after ten seconds.
+5. Transfer local records to the fresh Neon database with the export/import scripts; see [DEPLOYMENT.md](DEPLOYMENT.md).
 
-Manual configuration: build `npm ci --workspace server --include-workspace-root`, start `npm run start -w server`. Set `DATABASE_URL`, `FRONTEND_URL`, and `NODE_ENV=production`. If your external PostgreSQL provider requires TLS, set `DATABASE_SSL=true`; certificate verification stays enabled. Old editor-password/session/private-tree variables are no longer used and can be removed.
+Manual settings: instance **Free**, build `npm ci --workspace server --include-workspace-root`, start `npm run start -w server`. Supply `DATABASE_URL`, `DATABASE_SSL=true`, `FRONTEND_URL` and `NODE_ENV=production`. No local database in production.
 
-## Vercel frontend
+This can cost $0 within free allowances. Render sleeps after inactivity; cold starts can take about a minute. Neon Free has storage, compute and transfer quotas. Stay on free plans and use provider domains. Render can bill excess bandwidth/build usage when a payment method is present; without one it suspends access/builds at the limits. The deployment guide explains the account settings.
 
-1. Import the same repository with the repository root as the Root Directory.
+## Vercel Hobby frontend (free)
+
+1. Use a personal Hobby account and import the same repository with the repository root as the Root Directory.
 2. `vercel.json` sets `npm run build` and output directory `client/dist`.
 3. Set `VITE_API_URL=https://YOUR-API.onrender.com`, without an `/api` suffix. Never put database credentials in a `VITE_` variable.
 4. Deploy, then add the final Vercel origin to Render's `FRONTEND_URL`.
@@ -100,9 +102,21 @@ Graph metadata is computed from a consistent SQL snapshot and topological ancest
 
 Run `npx playwright install chromium` once and `npm run test:browser` for desktop/mobile checks. Alternatively set `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Browser tests run on ports 3002 and 5174 with an isolated database, and verify two independent browser sessions see the same records and receive automatic updates. Screenshots are in `test-results`. Test families never enter the local preview or production database.
 
-Managed Render/PostgreSQL and Vercel connectivity still require a smoke test after deploying with your accounts.
+Managed Neon/PostgreSQL, Render Free and Vercel connectivity still require a smoke test after deploying with your accounts.
 
 ## Tree views and birth order
+
+## Printing a branch or the whole clan
+
+Select a person (for example Tangaya), choose **Print family tree**, keep **this person and all descendants**, then **Prepare print preview**. The report includes every generation from a single database snapshot, even when the interactive tree is collapsed or paginated. Partners appear alongside the selected branch's members, but a partner's unrelated branches are not followed. Choose **Entire clan** to include every recorded family, including disconnected records.
+
+Use **Print / Save as PDF**, choose A4 or Letter, portrait, 100% scale, and turn off browser headers/footers. Each family sheet places parents above their children, with numbered pages and references to each child's own family sheets. Separate partnerships get separate groups. Large groups repeat the parents on continuation sheets. Long names get fewer children per sheet rather than smaller type. Printed content includes names, birth dates and gender; notes and locations are excluded. Black-and-white printing works without background colors.
+
+For about 500 descendants, use a booklet/PDF or print each main branch separately. A single ordinary sheet would make the names too small. The exact page count is displayed before printing; the 500-descendant test fixture generates 132 pages, including deliberately long names. That is a test example, not a fixed page count for the clan. Printing requires no paid service and does not alter family data.
+
+`GET /api/print?root=UUID` returns the entire selected branch; omitting root returns the whole clan. `npm run test:print` uses installed Chrome and an isolated 500-descendant database to check complete inclusion, desktop/mobile previews, page heights and A4/Letter PDF generation. Test PDFs are in `test-results/` and contain no real family data.
+
+### Birth order controls
 
 **Generation tree** shows the heads above children and grandchildren, regardless of which person was entered first or selected. **Simple tree** uses expandable indented branches. Partnerships keep their children in separate groups in both views.
 

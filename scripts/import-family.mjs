@@ -3,7 +3,7 @@ import { createDatabase, migrate } from "../server/src/db.js";
 import { importSnapshot } from "../server/src/transfer.js";
 if (!process.env.DATABASE_URL || process.env.NODE_ENV !== "production")
   throw new Error(
-    "Use a production DATABASE_URL in .env.render for this import.",
+    "Use your Neon DATABASE_URL and NODE_ENV=production in .env.neon for this import.",
   );
 const path = process.argv[2];
 if (!path) throw new Error("Supply the backup JSON path.");

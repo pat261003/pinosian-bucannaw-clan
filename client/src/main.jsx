@@ -27,6 +27,7 @@ import {
 
 import "./style.css";
 import HierarchyTree from "./HierarchyTree.jsx";
+import PrintFamily from "./PrintFamily.jsx";
 const API = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 async function api(path, options = {}) {
   const r = await fetch(API + "/api" + path, {
@@ -105,6 +106,7 @@ function Modal({ title, close, children }) {
   );
 }
 function App() {
+  const [printing, setPrinting] = useState(false);
   const [treeStyle, setTreeStyle] = useState("generations");
   const [stats, setStats] = useState(null),
     [list, setList] = useState({ items: [], total: 0 }),
@@ -127,9 +129,17 @@ function App() {
   const initialFocus = useRef(false);
   useEffect(() => {
     let live = true,
-      lastRevision = null;
+      lastRevision = null,
+      lastActivity = Date.now(),
+      checking = false;
     const check = async () => {
-      if (document.visibilityState === "hidden") return;
+      if (
+        document.visibilityState === "hidden" ||
+        checking ||
+        Date.now() - lastActivity > 120000
+      )
+        return;
+      checking = true;
       try {
         const { revision } = await api("/revision");
         if (!live) return;
@@ -138,17 +148,34 @@ function App() {
         lastRevision = revision;
       } catch {
         /* Normal data requests show connection errors. */
+      } finally {
+        checking = false;
       }
     };
+    const active = () => {
+      const wasIdle = Date.now() - lastActivity > 120000;
+      lastActivity = Date.now();
+      if (wasIdle) check();
+    };
+    const resume = () => {
+      lastActivity = Date.now();
+      check();
+    };
+    window.addEventListener("pointerdown", active);
+    window.addEventListener("keydown", active);
+    window.addEventListener("scroll", active, { passive: true });
     check();
     const timer = setInterval(check, 10000);
-    window.addEventListener("focus", check);
-    document.addEventListener("visibilitychange", check);
+    window.addEventListener("focus", resume);
+    document.addEventListener("visibilitychange", resume);
     return () => {
       live = false;
       clearInterval(timer);
-      window.removeEventListener("focus", check);
-      document.removeEventListener("visibilitychange", check);
+      window.removeEventListener("pointerdown", active);
+      window.removeEventListener("keydown", active);
+      window.removeEventListener("scroll", active);
+      window.removeEventListener("focus", resume);
+      document.removeEventListener("visibilitychange", resume);
     };
   }, []);
   useEffect(() => {
@@ -289,6 +316,13 @@ function App() {
           </p>
         </div>
       </aside>
+      {printing && (
+        <PrintFamily
+          api={api}
+          person={p || heads[0]}
+          close={() => setPrinting(false)}
+        />
+      )}
       <main>
         <header className="topbar">
           <img
@@ -436,7 +470,10 @@ function App() {
             </div>
           )}
           {loading && !stats ? (
-            <div className="loading">Gathering your family connections…</div>
+            <div className="loading">
+              Gathering your family connections… The free server may need about
+              a minute to wake up.
+            </div>
           ) : stats?.members === 0 && !error ? (
             <div className="empty">
               <div className="empty-art">
@@ -507,6 +544,9 @@ function App() {
                       </button>
                     </div>
                     <div className="tree-style-tabs" aria-label="Tree display">
+                      <button onClick={() => setPrinting(true)}>
+                        Print family tree
+                      </button>
                       <button
                         className={
                           treeStyle === "generations" ? "selected" : ""

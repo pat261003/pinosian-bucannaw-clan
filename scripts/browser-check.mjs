@@ -313,6 +313,15 @@ try {
     fullPage: true,
   });
   expect(errors).toEqual([]);
+  // An unattended foreground tab must stop spending database compute.
+  await page.clock.install();
+  let revisionRequests=0;
+  page.on("request",r=>{if(r.url().endsWith("/api/revision")) revisionRequests++;});
+  await page.clock.fastForward(121000);
+  await page.clock.fastForward(20000);
+  expect(revisionRequests).toBe(0);
+  await page.getByRole("button",{name:"Simple tree",exact:true}).click();
+  await expect.poll(()=>revisionRequests).toBeGreaterThan(0);
   console.log(
     "PASS: clan logo, seeded editable heads, unrestricted edits, optional fields, required gender, separate-browser automatic sync, reload persistence, mobile layout and zoom; anchored generations, simple tree, saved sibling ordering, and mobile ordering dialog.",
   );

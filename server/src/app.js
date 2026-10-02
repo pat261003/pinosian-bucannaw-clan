@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { z } from "zod";
+import { printReport } from "./print.js";
 import {
   graph,
   fail,
@@ -44,8 +45,9 @@ export function createApp(db) {
       legacyHeaders: false,
     }),
   );
-  app.get("/api/health", async (req, res) => {
-    await db.query("SELECT 1");
+  // Process liveness only: platform probes must not prevent Neon from sleeping.
+  // Startup migrations establish database connectivity; /api/heads verifies it on demand.
+  app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });
   app.get("/api/revision", async (req, res) =>
@@ -104,6 +106,10 @@ export function createApp(db) {
       generations: g.people.reduce((n, p) => Math.max(n, p.generation), 0),
       branches: g.roots.length,
     });
+  });
+  app.get("/api/print", async (req, res) => {
+    const root = req.query.root ? idSchema.parse(req.query.root) : null;
+    res.json(printReport(await graph(db), root));
   });
   function detail(g, id) {
     const p = g.byId.get(id);
