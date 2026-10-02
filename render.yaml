@@ -1,0 +1,24 @@
+databases:
+  - name: reunion-db
+    plan: basic-256mb
+    databaseName: reunion
+    user: reunion
+services:
+  - type: web
+    name: reunion-api
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --workspace server --include-workspace-root
+    startCommand: npm run start -w server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: reunion-db
+          property: connectionString
+      - key: FRONTEND_URL
+        sync: false
