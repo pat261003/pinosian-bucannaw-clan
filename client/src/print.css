@@ -38,6 +38,159 @@
   size: A4 portrait;
   margin: 12mm;
 }
+/* Scope typography and spacing to the report so app/mobile rules cannot enlarge it. */
+.family-print-page {
+  box-sizing: border-box;
+  min-height: 250mm;
+  display: flex;
+  flex-direction: column;
+  break-after: page;
+  page-break-after: always;
+  overflow: visible;
+  color: #111;
+  font:
+    8.5pt/1.2 Arial,
+    sans-serif;
+  letter-spacing: normal;
+}
+.family-print-page:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.family-print-page header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 0.5pt solid #444;
+  padding: 0 0 1.5mm;
+  margin: 0 0 1.5mm;
+  font-size: 8pt;
+}
+.family-print-page h1 {
+  font:
+    bold 11pt/1.2 Arial,
+    sans-serif;
+  margin: 1mm 0;
+  overflow-wrap: anywhere;
+}
+.family-print-page h2 {
+  font:
+    bold 9pt/1.2 Arial,
+    sans-serif;
+  margin: 0 0 1.5mm;
+}
+.family-print-page h3 {
+  font:
+    bold 8pt/1.2 Arial,
+    sans-serif;
+  margin: 1mm 0;
+}
+.family-print-page p {
+  font:
+    8.5pt/1.2 Arial,
+    sans-serif;
+  margin: 1mm 0;
+}
+.family-print-page footer {
+  margin: auto 0 0;
+  padding-top: 1.5mm;
+  border-top: 0.5pt solid #777;
+  font-size: 7.5pt;
+}
+.print-intro {
+  margin-bottom: 2mm;
+}
+.print-family-group {
+  padding: 2mm 0;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.print-family-group + .print-family-group {
+  border-top: 0.5pt solid #777;
+  margin-top: 1mm;
+}
+.print-parents {
+  border: 0.5pt solid #444;
+  border-radius: 1mm;
+  padding: 1.5mm 2mm;
+}
+.print-person + .print-person {
+  margin-top: 1mm;
+  padding-top: 1mm;
+  border-top: 0.5pt solid #aaa;
+}
+.family-print-page strong {
+  display: block;
+  font:
+    bold 9pt/1.15 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+  letter-spacing: normal;
+}
+.family-print-page small {
+  display: block;
+  font:
+    8pt/1.15 Arial,
+    sans-serif;
+  margin-top: 0.4mm;
+}
+.print-connector {
+  height: 2mm;
+  margin-left: 5mm;
+  border-left: 0.5pt solid #444;
+}
+.print-children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.print-children li {
+  display: flex;
+  gap: 2mm;
+  padding: 1mm 0;
+  border-top: 0.5pt solid #ccc;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.print-children li > div {
+  flex: 1;
+  min-width: 0;
+}
+.print-number {
+  font-size: 8pt;
+  min-width: 5mm;
+  padding-top: 0;
+}
+.print-reference {
+  display: block;
+  font:
+    7.5pt/1.15 Arial,
+    sans-serif;
+  margin-top: 0.4mm;
+  overflow-wrap: anywhere;
+}
+.print-continue {
+  font-weight: bold !important;
+}
+.print-preview {
+  max-height: 55vh;
+  overflow: auto;
+  margin-top: 18px;
+  background: #cecdc7;
+  padding: 12px;
+  color: #111;
+  font:
+    8.5pt/1.2 Arial,
+    sans-serif;
+}
+.print-preview .family-print-page {
+  width: 210mm;
+  min-height: 274mm;
+  padding: 12mm;
+  background: white;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px #0002;
+}
 @media print {
   body.family-print-ready {
     margin: 0 !important;
@@ -52,154 +205,13 @@
     width: 186mm;
     color: #111;
     background: white;
-    font:
-      11pt/1.35 Arial,
-      sans-serif;
   }
-}
-.family-print-page {
-  box-sizing: border-box;
-  min-height: 250mm;
-  display: flex;
-  flex-direction: column;
-  break-after: page;
-  page-break-after: always;
-  overflow: visible;
-}
-.family-print-page:last-child {
-  break-after: auto;
-  page-break-after: auto;
-}
-.family-print-page header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1pt solid #444;
-  padding-bottom: 4mm;
-  font-size: 9pt;
-  letter-spacing: 0.5pt;
-}
-.family-print-page h1 {
-  font:
-    bold 15pt/1.25 Arial,
-    sans-serif;
-  margin: 12mm 0 5mm;
-  overflow-wrap: anywhere;
-}
-.family-print-page h2 {
-  font:
-    bold 12pt Arial,
-    sans-serif;
-  margin: 6mm 0 4mm;
-}
-.family-print-page h3 {
-  font:
-    bold 10pt Arial,
-    sans-serif;
-  margin: 3mm 0;
-}
-.family-print-page p {
-  font-size: 11pt;
-  line-height: 1.5;
-  margin: 3mm 0;
-}
-.family-print-page img {
-  width: 45mm;
-  height: auto;
-}
-.family-print-page footer {
-  margin-top: auto;
-  padding-top: 5mm;
-  border-top: 0.5pt solid #777;
-  font-size: 9pt;
-}
-.print-parents {
-  border: 1pt solid #444;
-  border-radius: 2mm;
-  padding: 3mm 4mm;
-}
-.print-person + .print-person {
-  margin-top: 3mm;
-  padding-top: 3mm;
-  border-top: 0.5pt solid #aaa;
-}
-.family-print-page strong {
-  display: block;
-  font-size: 10pt;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-}
-.family-print-page small {
-  display: block;
-  font-size: 10pt;
-  margin-top: 1mm;
-}
-.print-connector {
-  height: 5mm;
-  margin-left: 8mm;
-  border-left: 1pt solid #444;
-}
-.print-children {
-  margin: 0 0 5mm;
-  padding: 0;
-  list-style: none;
-}
-.print-children li {
-  display: flex;
-  gap: 3mm;
-  padding: 3mm 0;
-  border-top: 0.5pt solid #aaa;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-.print-children li > div {
-  flex: 1;
-  min-width: 0;
-}
-.print-number {
-  font-size: 11pt;
-  min-width: 6mm;
-  padding-top: 0.5mm;
-}
-.print-reference {
-  display: block;
-  font-size: 10pt;
-  margin-top: 1mm;
-  overflow-wrap: anywhere;
-}
-.print-continue {
-  font-weight: bold;
-}
-
-.print-preview {
-  max-height: 55vh;
-  overflow: auto;
-  margin-top: 18px;
-  background: #cecdc7;
-  padding: 12px;
-  color: #111;
-  font:
-    11pt/1.35 Arial,
-    sans-serif;
-}
-.print-preview .family-print-page {
-  width: 210mm;
-  min-height: 274mm;
-  padding: 12mm;
-  background: white;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px #0002;
-}
-@media print {
   .family-print-page {
     width: auto;
     margin: 0;
     padding: 0;
     box-shadow: none;
   }
-}
-
-@media print {
   dialog::backdrop {
     display: none !important;
   }

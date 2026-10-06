@@ -95,6 +95,29 @@ try {
   const expectedPages = await page
     .locator("#family-print-document .family-print-page")
     .count();
+  expect(expectedPages).toBeLessThan(60);
+  const pageGroups = await page
+    .locator("#family-print-document .family-print-page")
+    .evaluateAll((nodes) =>
+      nodes.map((n) => n.querySelectorAll(".print-family-group").length),
+    );
+  expect(Math.max(...pageGroups)).toBeGreaterThan(1);
+  const childRows = await page
+    .locator("#family-print-document .print-family-group")
+    .evaluateAll((nodes) =>
+      nodes.map((n) => n.querySelectorAll(".print-children li").length),
+    );
+  expect(Math.max(...childRows)).toBeGreaterThan(5);
+  // Preview text must use the same small physical font sizes as the PDF.
+  const typography = await page
+    .locator(".print-preview .print-children strong")
+    .first()
+    .evaluate((n) => ({
+      font: parseFloat(getComputedStyle(n).fontSize),
+      padding: parseFloat(getComputedStyle(n.closest("li")).paddingTop),
+    }));
+  expect(typography.font).toBeLessThanOrEqual(12);
+  expect(typography.padding).toBeLessThan(4);
   await page.screenshot({ path: "test-results/print-preview-desktop.png" });
   await page.emulateMedia({ media: "print" });
   await expect(page.locator("#root")).toBeHidden();
