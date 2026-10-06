@@ -156,18 +156,60 @@ try {
     printBackground: false,
     displayHeaderFooter: false,
   });
-  await page.addStyleTag({
-    content: "@page { size: Letter portrait; margin:12mm; }",
-  });
+  await page.emulateMedia({ media: "screen" });
+  await page.getByLabel("Paper size", { exact: true }).selectOption("Letter");
+  await page.emulateMedia({ media: "print" });
   await page.pdf({
     path: "test-results/family-500-letter.pdf",
     preferCSSPageSize: true,
     printBackground: false,
     displayHeaderFooter: false,
   });
+  const landscapeCounts = {};
+  for (const paper of ["A4", "Letter"]) {
+    await page.emulateMedia({ media: "screen" });
+    await page.getByLabel("Paper size", { exact: true }).selectOption(paper);
+    await page
+      .getByLabel("Page orientation", { exact: true })
+      .selectOption("landscape");
+    await expect(page.locator(".print-preview")).toContainText(
+      "Descendant 500",
+    );
+    await expect(
+      page.locator(".print-preview .print-column").first(),
+    ).toBeVisible();
+    const count = await page
+      .locator("#family-print-document .family-print-page")
+      .count();
+    landscapeCounts[paper] = count;
+    await page.emulateMedia({ media: "print" });
+    const heights = await page
+      .locator("#family-print-document .family-print-page")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => n.getBoundingClientRect().height),
+      );
+    // A4 is the shorter landscape sheet: 186mm of printable height.
+    expect(Math.max(...heights)).toBeLessThanOrEqual(702);
+    const columns = await page
+      .locator("#family-print-document .family-print-page")
+      .first()
+      .locator(".print-column")
+      .evaluateAll((nodes) => nodes.map((n) => n.getBoundingClientRect().x));
+    expect(columns[1]).toBeGreaterThan(columns[0] + 400);
+    await page.pdf({
+      path: "test-results/family-500-" + paper.toLowerCase() + "-landscape.pdf",
+      preferCSSPageSize: true,
+      printBackground: false,
+      displayHeaderFooter: false,
+    });
+  }
   await writeFile(
     "test-results/print-expected.json",
-    JSON.stringify({ pages: expectedPages, descendants: 500 }),
+    JSON.stringify({
+      pages: expectedPages,
+      landscapePages: landscapeCounts,
+      descendants: 500,
+    }),
   );
   await page.emulateMedia({ media: "screen" });
   await page
@@ -190,10 +232,26 @@ try {
       .getByRole("dialog")
       .evaluate((el) => el.scrollWidth <= el.clientWidth),
   ).toBe(true);
+  await page
+    .getByLabel("Page orientation", { exact: true })
+    .selectOption("landscape");
+  await expect(page.locator(".print-preview.print-landscape")).toContainText(
+    "Descendant 500",
+  );
+  expect(
+    await page
+      .getByRole("dialog")
+      .evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+  await page.screenshot({ path: "test-results/print-landscape-mobile.png" });
+  await page
+    .getByLabel("Page orientation", { exact: true })
+    .selectOption("portrait");
+  await expect(page.locator(".print-preview.print-portrait")).toBeVisible();
   await page.screenshot({ path: "test-results/print-preview-mobile.png" });
   expect(errors).toEqual([]);
   console.log(
-    `PASS: 500 descendants, ${expectedPages} readable pages, A4/Letter PDFs, complete branch and clan, desktop/mobile preview.`,
+    `PASS: 500 descendants, ${expectedPages} readable pages, A4/Letter portrait and landscape PDFs, complete branch and clan, desktop/mobile preview.`,
   );
 } catch (e) {
   console.error(e);

@@ -216,3 +216,24 @@
     display: none !important;
   }
 }
+/* Landscape uses two explicit columns; pagination fills each column in order. */
+.print-landscape .print-groups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 6mm;
+}
+.print-column {
+  min-width: 0;
+}
+.print-landscape .family-print-page {
+  min-height: 180mm;
+}
+.print-preview.print-landscape .family-print-page {
+  width: 279mm;
+  min-height: 204mm;
+}
+@media print {
+  body.family-print-ready #family-print-document.print-landscape {
+    width: 255mm;
+  }
+}
