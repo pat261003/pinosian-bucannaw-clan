@@ -6,19 +6,14 @@ import {
   Search,
   Plus,
   ArrowUpRight,
-  ArrowLeft,
   ChevronRight,
   ChevronDown,
   X,
   Heart,
   MapPin,
   Calendar,
-  ZoomIn,
-  ZoomOut,
   Maximize,
   Leaf,
-  Network,
-  BookOpen,
   Check,
   RefreshCw,
   Trash2,
@@ -80,16 +75,27 @@ function Avatar({ person, large = false }) {
     </span>
   );
 }
-function Modal({ title, close, children }) {
+function Modal({ title, close, children, fullscreen = false }) {
   const ref = useRef();
   useEffect(() => {
     const old = document.activeElement;
     ref.current.showModal();
-    return () => old?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    if (fullscreen)
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (fullscreen && document.fullscreenElement)
+        document.exitFullscreen?.().catch(() => {});
+      old?.focus();
+    };
   }, []);
   return (
     <dialog
       ref={ref}
+      className={fullscreen ? "fullscreen-tree" : undefined}
+      aria-label={title}
       onCancel={close}
       onClick={(e) => {
         if (e.target === ref.current) close();
@@ -97,8 +103,13 @@ function Modal({ title, close, children }) {
     >
       <div className="modal-head">
         <h2>{title}</h2>
-        <button className="icon" aria-label="Close dialog" onClick={close}>
+        <button
+          className="icon"
+          aria-label={fullscreen ? "Exit full screen" : "Close dialog"}
+          onClick={close}
+        >
           <X size={21} />
+          {fullscreen && "Exit full screen"}
         </button>
       </div>
       {children}
@@ -106,11 +117,12 @@ function Modal({ title, close, children }) {
   );
 }
 function App() {
+  const [fullScreen, setFullScreen] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
   const [printing, setPrinting] = useState(false);
   const [treeStyle, setTreeStyle] = useState("generations");
   const [stats, setStats] = useState(null),
     [list, setList] = useState({ items: [], total: 0 }),
-    [view, setView] = useState("tree"),
     [query, setQuery] = useState(""),
     [offset, setOffset] = useState(0),
     [selected, setSelected] = useState(null),
@@ -186,7 +198,7 @@ function App() {
         Promise.all([
           api("/stats"),
           api(
-            `/persons?q=${encodeURIComponent(query)}&offset=${offset}&limit=24${view === "branches" ? "&roots=true" : ""}${branch ? "&branch=" + branch : ""}`,
+            `/persons?q=${encodeURIComponent(query)}&offset=${offset}&limit=24${branch ? "&branch=" + branch : ""}`,
           ),
           api("/branches?limit=100"),
           api("/heads"),
@@ -199,8 +211,7 @@ function App() {
               setHeads(heads);
               if (!initialFocus.current) {
                 initialFocus.current = true;
-                if (heads.length && view === "tree" && !selected)
-                  setSelected(heads[0].id);
+                if (heads.length && !selected) setSelected(heads[0].id);
               }
               setError("");
             }
@@ -219,7 +230,7 @@ function App() {
       live = false;
       clearTimeout(timer);
     };
-  }, [query, offset, view, version, branch]);
+  }, [query, offset, version, branch]);
   useEffect(() => {
     if (!selected) {
       setTree(null);
@@ -253,7 +264,7 @@ function App() {
     setSelected(id);
     setUnionId("");
     setChildOffset(0);
-    setView("tree");
+    setShowMembers(false);
     setQuery("");
     setError("");
   };
@@ -273,49 +284,25 @@ function App() {
   const p = tree?.person;
   return (
     <div className="app">
-      <aside className="sidebar">
-        <a className="brand" href="/" aria-label="Pinosian Bucannaw Clan home">
-          <img src="/clan-logo.png" alt="Pinosian Bucannaw Clan" />
-        </a>
-        <div className="workspace-label">YOUR FAMILY SPACE</div>
-        <nav>
-          {[
-            ["tree", GitFork, "Family tree"],
-            ["members", Users, "All members"],
-            ["branches", Network, "Family branches"],
-          ].map(([id, Icon, label]) => (
-            <button
-              key={id}
-              className={view === id ? "active" : ""}
-              onClick={() => {
-                setView(id);
-                setOffset(0);
-                setBranch("");
-                setQuery("");
-              }}
-            >
-              <Icon size={19} />
-              {label}
-              {id === "members" && (
-                <span className="nav-count">{stats?.members ?? "—"}</span>
-              )}
-            </button>
-          ))}
-        </nav>
-        <div className="side-note">
-          <Leaf size={25} />
-          <h3>
-            Every connection
-            <br />
-            has a story.
-          </h3>
-          <p>
-            A living record of the people
-            <br />
-            who make you, you.
-          </p>
-        </div>
-      </aside>
+      {fullScreen && (
+        <Modal
+          title="Family tree"
+          fullscreen
+          close={() => setFullScreen(false)}
+        >
+          <HierarchyTree
+            root={heads[0]}
+            selected={selected}
+            ancestors={p?.ancestor_ids || []}
+            style="generations"
+            version={version}
+            api={api}
+            focus={(id) => {
+              focus(id);
+            }}
+          />
+        </Modal>
+      )}
       {printing && (
         <PrintFamily
           api={api}
@@ -324,120 +311,35 @@ function App() {
         />
       )}
       <main>
-        <header className="topbar">
-          <img
-            className="mobile-clan-brand"
-            src="/clan-logo.png"
-            alt="Pinosian Bucannaw Clan"
-          />
-          <div className="breadcrumb">
-            Our family <ChevronRight size={14} />{" "}
-            <strong>
-              {view === "tree"
-                ? "Family tree"
-                : view === "members"
-                  ? "All members"
-                  : "Family branches"}
-            </strong>
-          </div>
-          <span className="connection">
-            <i />
-            Shared clan tree
-          </span>
-        </header>
-        <section className="page-heading">
-          <div>
-            <div className="eyebrow">PINOSIAN BUCANNAW CLAN</div>
-            <h1>
-              {view === "tree"
-                ? "Our family tree"
-                : view === "members"
-                  ? "The people in our story"
-                  : "Where our stories begin"}
-            </h1>
-            <p>
-              {view === "tree"
-                ? "Every generation, every branch, one family."
-                : view === "members"
-                  ? "Find a familiar name. Discover a new connection."
-                  : "Explore family roots, traced through parenthood."}
-            </p>
-          </div>
+        <header className="single-header">
+          <a
+            className="brand"
+            href="/"
+            aria-label="Pinosian Bucannaw Clan home"
+          >
+            <img
+              className="mobile-clan-brand"
+              src="/clan-logo.png"
+              alt="Pinosian Bucannaw Clan"
+            />
+          </a>
+          <h1>Family tree</h1>
           <button className="primary" onClick={() => add()}>
             <Plus size={18} /> Add family member
           </button>
-        </section>
+        </header>
         <section
           className="getting-started"
           aria-label="How to add your family"
         >
-          <div>
-            <strong>Add your part of the family</strong>
-            <p>
-              Find someone you know, then add their child, parent, or partner.
-              You can fill in missing details later.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setView("members");
-              setQuery("");
-              setOffset(0);
-              setTimeout(
-                () => document.querySelector(".search input")?.focus(),
-                0,
-              );
-            }}
-          >
-            <Search size={17} />
-            Find a person
-          </button>
-          {heads.length > 0 && (
-            <button onClick={() => focus(heads[0].id)}>
-              <GitFork size={17} />
-              Back to clan heads
-            </button>
-          )}
-        </section>
-        <section className="stats">
-          {[
-            [Users, "Family members", stats?.members],
-            [Heart, "Partnerships", stats?.unions],
-            [GitFork, "Generations", stats?.generations],
-            [Network, "Family roots", stats?.branches],
-          ].map(([Icon, label, value]) => (
-            <div key={label}>
-              <span className="stat-icon">
-                <Icon size={19} />
-              </span>
-              <div>
-                <strong>{value ?? "—"}</strong>
-                <span>{label}</span>
-              </div>
-            </div>
-          ))}
+          <p>
+            <strong>To add family:</strong> 1. Search for a relative. 2. Select
+            their name. 3. Choose <strong>Add a relative</strong>, then save
+            their details.
+          </p>
         </section>
         <section className="workspace">
           <div className="toolbar">
-            <div className="view-tabs">
-              <button
-                className={view === "tree" ? "selected" : ""}
-                onClick={() => setView("tree")}
-              >
-                <GitFork size={17} />
-                Tree view
-              </button>
-              <button
-                className={view === "members" ? "selected" : ""}
-                onClick={() => {
-                  setView("members");
-                  setOffset(0);
-                }}
-              >
-                <Users size={17} />
-                Find a person
-              </button>
-            </div>
             <label className="search">
               <Search size={18} />
               <input
@@ -459,6 +361,18 @@ function App() {
                 </button>
               )}
             </label>
+            <button
+              onClick={() => setShowMembers(!showMembers)}
+              aria-expanded={showMembers}
+            >
+              <Users size={18} />
+              {showMembers ? "Hide member list" : "Browse all members"}
+            </button>
+            {heads.length > 0 && (
+              <button onClick={() => focus(heads[0].id)}>
+                Back to clan heads
+              </button>
+            )}
           </div>
           {error && (
             <div className="error" role="alert">
@@ -469,10 +383,71 @@ function App() {
               </button>
             </div>
           )}
+          {(query || showMembers || !selected) && stats && (
+            <div className="directory">
+              <div className="directory-head">
+                <div>
+                  <h2>{query ? "Search results" : "Family members"}</h2>
+                  <p>
+                    {list.total} {list.total === 1 ? "person" : "people"}
+                    {query ? " matching your search" : " in the family"}
+                  </p>
+                </div>
+                {
+                  <select
+                    aria-label="Filter by family root"
+                    value={branch}
+                    onChange={(e) => {
+                      setBranch(e.target.value);
+                      setOffset(0);
+                    }}
+                  >
+                    <option value="">All family roots</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {name(b)}
+                      </option>
+                    ))}
+                  </select>
+                }
+              </div>
+              <div className="member-grid">
+                {list.items.map((person) => (
+                  <button
+                    className="member-card"
+                    key={person.id}
+                    onClick={() => focus(person.id)}
+                  >
+                    <Avatar person={person} />
+                    <div>
+                      <strong>{name(person)}</strong>
+                      <span>{date(person.birth_date)}</span>
+                      <small>
+                        Generation {person.generation} ·{" "}
+                        {person.branches.length}{" "}
+                        {person.branches.length === 1 ? "root" : "roots"}
+                      </small>
+                    </div>
+                    <ArrowUpRight size={17} />
+                  </button>
+                ))}
+              </div>
+              {list.total === 0 && (
+                <p className="no-results">
+                  No matching family members. Try another name.
+                </p>
+              )}
+              <Pager
+                offset={offset}
+                total={list.total}
+                size={24}
+                change={setOffset}
+              />
+            </div>
+          )}
           {loading && !stats ? (
             <div className="loading">
-              Gathering your family connections… The free server may need about
-              a minute to wake up.
+              Loading family members… This may take up to a minute.
             </div>
           ) : stats?.members === 0 && !error ? (
             <div className="empty">
@@ -493,12 +468,11 @@ function App() {
                   <Plus size={18} />
                 </span>
               </div>
-              <span className="eyebrow">EVERY FAMILY STARTS WITH SOMEONE</span>
               <h2>Start Your Family Tree</h2>
               <p>
                 No family members have been added yet.
                 <br />
-                Add your first family member and let your story grow.
+                Choose Add First Family Member to begin.
               </p>
               <button className="primary" onClick={() => add()}>
                 <Plus size={18} /> Add First Family Member
@@ -507,18 +481,9 @@ function App() {
                 Begin with yourself, a parent, or a family head.
               </span>
             </div>
-          ) : view === "tree" && selected && !query ? (
+          ) : selected ? (
             <div className="explorer">
               <div className="tree-area">
-                <div className="tree-caption">
-                  <button
-                    className="text-button"
-                    onClick={() => setSelected(null)}
-                  >
-                    <ArrowLeft size={16} /> All family members
-                  </button>
-                  <span>TAP A PERSON TO EXPLORE</span>
-                </div>
                 {tree ? (
                   <>
                     <div className="focus-actions">
@@ -543,24 +508,25 @@ function App() {
                         See their details <ChevronDown size={15} />
                       </button>
                     </div>
-                    <div className="tree-style-tabs" aria-label="Tree display">
+                    <div className="tree-tools" aria-label="Tree controls">
+                      <button onClick={() => setFullScreen(true)}>
+                        <Maximize size={18} />
+                        Full screen
+                      </button>
                       <button onClick={() => setPrinting(true)}>
                         Print family tree
                       </button>
-                      <button
-                        className={
-                          treeStyle === "generations" ? "selected" : ""
-                        }
-                        onClick={() => setTreeStyle("generations")}
-                      >
-                        Generation tree
-                      </button>
-                      <button
-                        className={treeStyle === "outline" ? "selected" : ""}
-                        onClick={() => setTreeStyle("outline")}
-                      >
-                        Simple tree
-                      </button>
+                      <label className="tree-display">
+                        Display
+                        <select
+                          aria-label="Tree display"
+                          value={treeStyle}
+                          onChange={(e) => setTreeStyle(e.target.value)}
+                        >
+                          <option value="generations">Generation tree</option>
+                          <option value="outline">Simple tree</option>
+                        </select>
+                      </label>
                     </div>
                     {!p.branches.some((id) => heads.some((h) => h.id === id)) &&
                       !p.is_clan_head && (
@@ -760,93 +726,8 @@ function App() {
                 </aside>
               )}
             </div>
-          ) : (
-            <div className="directory">
-              <div className="directory-head">
-                <div>
-                  <h2>
-                    {query
-                      ? "Search results"
-                      : view === "branches"
-                        ? "Family roots"
-                        : "Find your place in the family"}
-                  </h2>
-                  <p>
-                    {list.total} {list.total === 1 ? "person" : "people"}
-                    {query
-                      ? " matching your search"
-                      : view === "branches"
-                        ? " with no recorded parents"
-                        : " in your collection"}
-                  </p>
-                </div>
-                {view !== "branches" && (
-                  <select
-                    aria-label="Filter by family root"
-                    value={branch}
-                    onChange={(e) => {
-                      setBranch(e.target.value);
-                      setOffset(0);
-                    }}
-                  >
-                    <option value="">All family roots</option>
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {name(b)}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-              <div className="member-grid">
-                {list.items.map((person) => (
-                  <button
-                    className="member-card"
-                    key={person.id}
-                    onClick={() => focus(person.id)}
-                  >
-                    <Avatar person={person} />
-                    <div>
-                      <strong>{name(person)}</strong>
-                      <span>{date(person.birth_date)}</span>
-                      <small>
-                        Generation {person.generation} ·{" "}
-                        {person.branches.length}{" "}
-                        {person.branches.length === 1 ? "root" : "roots"}
-                      </small>
-                    </div>
-                    <ArrowUpRight size={17} />
-                  </button>
-                ))}
-              </div>
-              {list.total === 0 && (
-                <p className="no-results">
-                  No matching family members. Try another name.
-                </p>
-              )}
-              <Pager
-                offset={offset}
-                total={list.total}
-                size={24}
-                change={setOffset}
-              />
-            </div>
-          )}
-          <div className="workspace-footer">
-            <span>
-              <Leaf size={14} /> A little history. A lot of belonging.
-            </span>
-            <span>Made for the generations to come.</span>
-          </div>
+          ) : null}
         </section>
-        <footer className="page-footer">
-          <span>
-            Pinosian Bucannaw <span>Our clan, connected.</span>
-          </span>
-          <button onClick={() => setModal({ type: "guide" })}>
-            <BookOpen size={15} /> A guide to your tree
-          </button>
-        </footer>
       </main>
       {notice && (
         <div className="toast" role="status">
@@ -874,7 +755,7 @@ function App() {
             setTree(null);
             setQuery("");
             setOffset(0);
-            setView("members");
+            setShowMembers(true);
             refresh();
             setNotice(
               "Person deleted. Their other relatives are still in the tree.",
@@ -915,41 +796,6 @@ function App() {
           close={() => setModal(null)}
           done={() => saved()}
         />
-      )}
-      {modal?.type === "guide" && (
-        <Modal title="A guide to your tree" close={() => setModal(null)}>
-          <div className="guide">
-            <p>
-              Start with a family head, then open their card to add parents,
-              children, or partners. You can connect an existing person or
-              create someone new.
-            </p>
-            <h3>One family unit at a time</h3>
-            <p>
-              Choose a partner to see only the children recorded with that
-              person. “One known parent” keeps children whose other parent is
-              unknown in a separate group.
-            </p>
-            <h3>Explore at your own pace</h3>
-            <p>
-              The clan heads stay at the top. Select a person to see their
-              details. Use Simple tree to open branches like folders. Drag the
-              generation tree, pinch on touchscreens, or use the zoom buttons.
-              Large families appear in pages of 12 children.
-            </p>
-            <h3>Roots and generations</h3>
-            <p>
-              Roots are people with no recorded parents. Generations follow the
-              longest recorded parent-child path; partnerships never change
-              ancestry. A person can descend from more than one root.
-            </p>
-            <h3>Keep your connections accurate</h3>
-            <p>
-              Add a missing second parent from a child’s profile. To correct a
-              parent, remove the incorrect link before adding the right person.
-            </p>
-          </div>
-        </Modal>
       )}
     </div>
   );

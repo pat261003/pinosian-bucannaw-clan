@@ -2502,3 +2502,242 @@ textarea::placeholder {
   margin: 0;
   padding: 6px;
 }
+/* One shared screen: readable controls and no navigation tabs. */
+.app main {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 1600px;
+  padding: 0 24px 24px;
+}
+.single-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+.single-header .brand {
+  padding: 0;
+}
+.single-header .brand img {
+  display: block;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
+}
+.single-header h1 {
+  font:
+    650 26px "DM Sans",
+    sans-serif;
+  margin: 0;
+  flex: 1;
+}
+.getting-started {
+  margin: 0 0 16px;
+  padding: 16px;
+}
+.getting-started p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+button,
+button.icon {
+  min-height: 44px;
+}
+button.icon,
+.hierarchy-zoom button {
+  min-width: 44px;
+}
+button,
+input,
+select,
+textarea,
+.search input {
+  font-size: 16px;
+}
+.toolbar {
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px;
+}
+.toolbar .search {
+  flex: 1;
+  min-width: 240px;
+  max-width: none;
+  width: auto;
+}
+.tree-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 12px 16px;
+}
+.tree-tools .selected {
+  background: var(--stone);
+  border-color: var(--bronze);
+}
+.hierarchy-help,
+.field-help,
+.person-detail .muted,
+.person-detail .facts {
+  font-size: 15px;
+  line-height: 1.6;
+}
+.person-detail .person-link,
+.focus-actions button,
+.relative-actions button {
+  font-size: 16px;
+}
+.focus-actions small {
+  font-size: 14px;
+}
+.person-detail {
+  scroll-margin-top: 16px;
+}
+.directory {
+  border-bottom: 1px solid var(--line);
+}
+.member-card strong {
+  font-size: 17px;
+}
+.member-card span {
+  font-size: 14px;
+}
+.fullscreen-tree {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--cream, #e5e2da);
+}
+.fullscreen-tree[open] {
+  display: flex;
+  flex-direction: column;
+}
+.fullscreen-tree .modal-head {
+  flex: none;
+  padding: 12px max(16px, env(safe-area-inset-right)) 12px
+    max(16px, env(safe-area-inset-left));
+  margin: 0;
+}
+.fullscreen-tree .modal-head h2 {
+  margin: 0;
+  font-size: 22px;
+}
+.fullscreen-tree .hierarchy-view {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.fullscreen-tree .hierarchy-canvas {
+  height: auto !important;
+  flex: 1;
+  width: 100% !important;
+}
+.fullscreen-tree .hierarchy-help {
+  margin: 8px 16px;
+}
+.fullscreen-tree .hierarchy-zoom {
+  flex: none;
+}
+@media (max-width: 800px) {
+  .app main {
+    padding: 0 12px 20px;
+  }
+  .single-header {
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .single-header .brand img {
+    width: 64px;
+    height: 64px;
+  }
+  .single-header h1 {
+    font-size: 24px;
+  }
+  .single-header > button {
+    width: 100%;
+  }
+  .toolbar .search {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .toolbar > button {
+    flex: 1;
+  }
+  .tree-tools button {
+    flex: 1 1 40%;
+  }
+  .focus-actions {
+    flex-wrap: wrap;
+  }
+  .focus-actions > div {
+    flex-basis: 100%;
+  }
+  .focus-actions > button {
+    font-size: 16px;
+  }
+  .hierarchy-canvas {
+    height: 380px !important;
+  }
+  .person-detail {
+    padding: 18px;
+  }
+  .form-grid,
+  .optional-details .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid label,
+  .field label,
+  .field-help,
+  .form-help,
+  .form-footer button,
+  .segmented button {
+    font-size: 16px;
+  }
+  .form-grid input,
+  .form-grid select,
+  .form-grid textarea {
+    font-size: 16px;
+    min-height: 48px;
+  }
+  .fullscreen-tree .modal-head {
+    gap: 8px;
+  }
+}
+.tree-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+.tree-display select {
+  margin: 0;
+  width: auto;
+  min-height: 44px;
+}
+.tree-node strong {
+  font-size: 20px;
+}
+.tree-node > span:not(.avatar) {
+  font-size: 16px;
+}
+.outline-name {
+  font-size: 16px;
+}
+@media (max-width: 800px) {
+  .tree-display {
+    width: 100%;
+  }
+  .tree-display select {
+    flex: 1;
+    min-width: 0;
+  }
+}

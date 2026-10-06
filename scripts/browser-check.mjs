@@ -42,6 +42,37 @@ try {
   await expect(
     page.getByRole("button", { name: /Editor|Unlock|Login/i }),
   ).toHaveCount(0);
+  await expect(
+    page.locator("nav, .sidebar, .view-tabs, .workspace-footer, .page-footer"),
+  ).toHaveCount(0);
+  await page
+    .getByRole("button", { name: "Browse all members", exact: true })
+    .click();
+  await expect(page.locator(".member-card")).toHaveCount(2);
+  await page.getByLabel("Search family members").fill("Bucannaw");
+  await expect(page.locator(".member-card")).toHaveCount(1);
+  await expect(page.locator(".hierarchy-view")).toBeVisible();
+  await page.locator(".member-card").click();
+  await expect(page.locator(".person-detail h2")).toHaveText("Bucannaw");
+  await page
+    .getByRole("button", { name: "Back to clan heads", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Full screen", exact: true }).click();
+  await expect(
+    page.getByRole("dialog", { name: "Family tree", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => !!document.fullscreenElement))
+    .toBe(true);
+  await page.screenshot({ path: "test-results/fullscreen-desktop.png" });
+  await page
+    .getByRole("button", { name: "Exit full screen", exact: true })
+    .click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect
+    .poll(() => page.evaluate(() => !!document.fullscreenElement))
+    .toBe(false);
+  await expect(page.locator(".person-detail h2")).toHaveText("Pinosian");
   await page.screenshot({
     path: "test-results/clan-desktop.png",
     fullPage: true,
@@ -99,6 +130,35 @@ try {
   phone.on("pageerror", (e) => errors.push(e.message));
   await phone.goto("http://127.0.0.1:5174");
   await expect(phone.locator(".mobile-clan-brand")).toBeVisible();
+  // Mobile browsers without the Fullscreen API still fill the viewport.
+  await phone.evaluate(() => {
+    Element.prototype.requestFullscreen = undefined;
+  });
+  await phone.getByRole("button", { name: "Full screen", exact: true }).tap();
+  const full = phone.getByRole("dialog", { name: "Family tree", exact: true });
+  await expect(full).toBeVisible();
+  expect(
+    await full.evaluate(
+      (el) => Math.abs(el.getBoundingClientRect().height - innerHeight) < 2,
+    ),
+  ).toBe(true);
+  await full.getByRole("button", { name: "Zoom in", exact: true }).tap();
+  await expect(full.locator(".canvas-content")).toHaveAttribute(
+    "style",
+    /scale\(1\./,
+  );
+  await phone.screenshot({ path: "test-results/fullscreen-mobile.png" });
+  await full
+    .getByRole("button", { name: "Exit full screen", exact: true })
+    .tap();
+  await expect(full).toHaveCount(0);
+  await phone.setViewportSize({ width: 320, height: 740 });
+  expect(
+    await phone.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await phone.setViewportSize({ width: 390, height: 844 });
   await expect(phone.locator(".generation-children").first()).toContainText(
     "Unknown member",
   );
@@ -245,7 +305,9 @@ try {
   await expect(
     page.locator('[data-generation="1"] > .hierarchy-person-heading'),
   ).toContainText("Bucannaw");
-  await page.getByRole("button", { name: "Simple tree", exact: true }).click();
+  await page
+    .getByLabel("Tree display", { exact: true })
+    .selectOption("outline");
   await expect(page.locator(".outline-scroll")).toContainText(
     "Grandchild entered first",
   );
@@ -274,7 +336,9 @@ try {
     fullPage: true,
   });
   await phone.reload();
-  await phone.getByRole("button", { name: "Simple tree", exact: true }).tap();
+  await phone
+    .getByLabel("Tree display", { exact: true })
+    .selectOption("outline");
   await expect(
     phone
       .locator(".outline-children")
@@ -293,18 +357,29 @@ try {
       () => document.documentElement.scrollWidth <= innerWidth,
     ),
   ).toBe(true);
-  await phone.getByRole("button",{name:"Arrange children",exact:true}).tap();
-  await expect(phone.getByRole("dialog",{name:"Arrange children"})).toBeVisible();
-  expect(await phone.getByRole("dialog").evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
-  await phone.screenshot({path:"test-results/arrange-children-mobile.png",fullPage:true});
-  await phone.getByRole("button",{name:"Cancel",exact:true}).tap();
+  await phone
+    .getByRole("button", { name: "Arrange children", exact: true })
+    .tap();
+  await expect(
+    phone.getByRole("dialog", { name: "Arrange children" }),
+  ).toBeVisible();
+  expect(
+    await phone
+      .getByRole("dialog")
+      .evaluate((el) => el.scrollWidth <= el.clientWidth),
+  ).toBe(true);
+  await phone.screenshot({
+    path: "test-results/arrange-children-mobile.png",
+    fullPage: true,
+  });
+  await phone.getByRole("button", { name: "Cancel", exact: true }).tap();
   await phone.screenshot({
     path: "test-results/simple-tree-mobile.png",
     fullPage: true,
   });
   await page
-    .getByRole("button", { name: "Generation tree", exact: true })
-    .click();
+    .getByLabel("Tree display", { exact: true })
+    .selectOption("generations");
   await expect(
     page.locator('[data-person-id="' + grandchild.id + '"]'),
   ).toHaveAttribute("data-generation", "3");
@@ -315,13 +390,18 @@ try {
   expect(errors).toEqual([]);
   // An unattended foreground tab must stop spending database compute.
   await page.clock.install();
-  let revisionRequests=0;
-  page.on("request",r=>{if(r.url().endsWith("/api/revision")) revisionRequests++;});
+  let revisionRequests = 0;
+  page.on("request", (r) => {
+    if (r.url().endsWith("/api/revision")) revisionRequests++;
+  });
   await page.clock.fastForward(121000);
   await page.clock.fastForward(20000);
   expect(revisionRequests).toBe(0);
-  await page.getByRole("button",{name:"Simple tree",exact:true}).click();
-  await expect.poll(()=>revisionRequests).toBeGreaterThan(0);
+  await page
+    .getByLabel("Tree display", { exact: true })
+    .selectOption("outline");
+  await page.getByLabel("Tree display", { exact: true }).click();
+  await expect.poll(() => revisionRequests).toBeGreaterThan(0);
   console.log(
     "PASS: clan logo, seeded editable heads, unrestricted edits, optional fields, required gender, separate-browser automatic sync, reload persistence, mobile layout and zoom; anchored generations, simple tree, saved sibling ordering, and mobile ordering dialog.",
   );

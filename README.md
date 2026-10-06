@@ -4,6 +4,10 @@ For the full beginner walkthrough, including transferring existing family record
 
 A shared family tree with React + Vite, Express, and PostgreSQL. The supplied clan logo is bundled in `client/public/clan-logo.png`; the interface uses light ivory, cream, and gold. Everyone visiting the site can add and edit records. There is no login, editor password, cookie-based member storage, or browser-only family database.
 
+## One screen on phone and desktop
+
+Search, browse members, view the tree and edit relatives from one screen, without navigation tabs. Search results appear above the tree. Choose a name, then **Add a relative**. Mobile forms use one column with larger text and touch targets. **Display** changes between Generation tree and Simple tree. **Full screen** opens a tree-only view for reunions with zoom controls and an **Exit full screen** button; browsers without native fullscreen use the full available viewport. Printing remains beside Full screen.
+
 ## Starting heads and member details
 
 Pinosian and Bucannaw are inserted as partners once by the database migration, with no surnames or birthdays and gender **Unknown** until the clan supplies those details. The default tree opens on their family. Their records can be edited in the app; restarting or redeploying never resets those edits or duplicates the heads. Existing family data is preserved during upgrades.

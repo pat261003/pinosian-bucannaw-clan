@@ -46,7 +46,7 @@ export default function HierarchyTree({
       <p className="hierarchy-help">
         {style === "outline"
           ? "Open the arrows to see children, then their children. Select a name to view or edit that person."
-          : "Clan heads stay at the top. Open a family to see the next generation below it. Partners’ children are kept in separate groups."}
+          : "Tap arrows to show children. Tap a name for details. Drag to move the tree; pinch or use + and − to zoom."}
       </p>
       {style === "outline" ? (
         <div className="outline-scroll">
