@@ -86,7 +86,7 @@ export async function migrate(db, { seedHeads = true } = {}) {
       const first = "a1715ea1-701a-4412-9000-000000000001",
         second = "a1715ea1-701a-4412-9000-000000000002";
       await c.query(
-        "INSERT INTO persons(id,first_name,last_name,birth_date,gender) VALUES($1,'Pinosian','',NULL,'Unknown'),($2,'Bucannaw','',NULL,'Unknown')",
+        "INSERT INTO persons(id,first_name,last_name,birth_date,gender,life_status) VALUES($1,'Pinosian','',NULL,'Unknown','Deceased'),($2,'Bucannaw','',NULL,'Unknown','Deceased')",
         [first, second],
       );
       await c.query("INSERT INTO unions(person1_id,person2_id) VALUES($1,$2)", [
@@ -98,5 +98,23 @@ export async function migrate(db, { seedHeads = true } = {}) {
         [first, second],
       );
       await c.query("INSERT INTO app_migrations(id) VALUES('002_clan_heads')");
+    });
+  if (seedHeads)
+    await db.transaction(async (c) => {
+      if (
+        (
+          await c.query(
+            "SELECT 1 FROM app_migrations WHERE id='003_living_status'",
+          )
+        ).rows.length
+      )
+        return;
+      // The clan confirmed that both founding heads and their children are deceased.
+      await c.query(
+        "UPDATE persons SET life_status='Deceased' WHERE life_status='Unknown' AND (id IN (SELECT person_id FROM clan_heads) OR id IN (SELECT r.child_id FROM parent_child_relationships r JOIN clan_heads h ON h.person_id=r.parent_id))",
+      );
+      await c.query(
+        "INSERT INTO app_migrations(id) VALUES('003_living_status')",
+      );
     });
 }

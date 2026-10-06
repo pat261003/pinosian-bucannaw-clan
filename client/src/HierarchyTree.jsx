@@ -103,6 +103,11 @@ function PersonButton({ person, focus, selected, outline }) {
       aria-label={"View " + name(person)}
     >
       <strong>{name(person)}</strong>
+      <span className="life-status">
+        {!person.life_status || person.life_status === "Unknown"
+          ? "Status unknown"
+          : person.life_status}
+      </span>
       {!outline && (
         <span>
           {person.birth_date?.slice(0, 4) || "Birth date unknown"} ·{" "}

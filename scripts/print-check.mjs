@@ -92,6 +92,23 @@ try {
     .click();
   await expect(page.getByRole("status")).toContainText("500 descendants");
   await expect(page.locator(".print-preview")).toContainText("Descendant 500");
+  await page
+    .getByLabel("What would you like to print?")
+    .selectOption("immediate");
+  await page
+    .getByRole("button", { name: "Prepare print preview", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("Immediate family only");
+  await expect(page.locator(".print-preview")).not.toContainText(
+    "Descendant 500",
+  );
+  await expect(page.locator(".print-preview")).toContainText("Descendant 020");
+  await expect(page.locator(".print-preview")).toContainText("Status unknown");
+  await page.getByLabel("What would you like to print?").selectOption("branch");
+  await page
+    .getByRole("button", { name: "Prepare print preview", exact: true })
+    .click();
+  await expect(page.getByRole("status")).toContainText("500 descendants");
   const expectedPages = await page
     .locator("#family-print-document .family-print-page")
     .count();

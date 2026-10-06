@@ -73,3 +73,6 @@ SELECT setval('person_entry_sequence',GREATEST(COALESCE((SELECT max(entry_order)
 ALTER TABLE persons ALTER COLUMN entry_order SET DEFAULT nextval('person_entry_sequence');
 ALTER TABLE persons ALTER COLUMN entry_order SET NOT NULL;
 ALTER TABLE persons ADD COLUMN IF NOT EXISTS sibling_order integer CHECK(sibling_order > 0);
+
+-- Keep unconfirmed living status explicit; existing member records are preserved.
+ALTER TABLE persons ADD COLUMN IF NOT EXISTS life_status text NOT NULL DEFAULT 'Unknown' CHECK(life_status IN ('Living','Deceased','Unknown'));

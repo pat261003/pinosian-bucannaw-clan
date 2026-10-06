@@ -2741,3 +2741,21 @@ textarea,
     min-width: 0;
   }
 }
+.life-status {
+  display: inline-block;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.person-detail > .life-status {
+  margin: 8px 0;
+  padding: 6px 10px;
+  border: 1px solid var(--bronze);
+  border-radius: 6px;
+}
+.tree-node > .life-status {
+  font-size: 16px;
+}
+.outline-name .life-status {
+  font-size: 13px;
+}

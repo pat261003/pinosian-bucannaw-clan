@@ -109,7 +109,12 @@ export function createApp(db) {
   });
   app.get("/api/print", async (req, res) => {
     const root = req.query.root ? idSchema.parse(req.query.root) : null;
-    res.json(printReport(await graph(db), root));
+    const scope = z
+      .enum(["branch", "immediate"])
+      .parse(req.query.scope || "branch");
+    if (scope === "immediate" && !root)
+      fail("Select a person for immediate-family printing.");
+    res.json(printReport(await graph(db), root, scope));
   });
   function detail(g, id) {
     const p = g.byId.get(id);
@@ -330,6 +335,8 @@ export function createApp(db) {
   });
   app.put("/api/persons/:id", async (req, res) => {
     const p = personSchema.parse(req.body);
+    // Preserve status when an older client submits an edit during rollout.
+    if (!Object.hasOwn(req.body, "life_status")) delete p.life_status;
     res.json(
       await db.transaction(async (c) => {
         await ensurePerson(c, req.params.id);

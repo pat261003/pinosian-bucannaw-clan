@@ -8,6 +8,12 @@ A shared family tree with React + Vite, Express, and PostgreSQL. The supplied cl
 
 Search, browse members, view the tree and edit relatives from one screen, without navigation tabs. Search results appear above the tree. Choose a name, then **Add a relative**. Mobile forms use one column with larger text and touch targets. **Display** changes between Generation tree and Simple tree. **Full screen** opens a tree-only view for reunions with zoom controls and an **Exit full screen** button; browsers without native fullscreen use the full available viewport. Printing remains beside Full screen.
 
+## Living status and immediate-family printing
+
+Members can choose **Living**, **Deceased**, or **Unknown / Not confirmed** when adding or editing a person. The status appears on tree names, member lists, details and printed reports. Existing people start as Unknown except the founding heads and their currently recorded children, whom the clan confirmed are deceased. This upgrade applies that information once; later edits are preserved. Status is never inferred from age or generation. Backups preserve the field, and older backups use Unknown.
+
+To print a smaller family, select its starting person, open **Print family tree**, and choose **[name], partner(s) and children only**. This includes the selected person, their partners and direct children, excluding ancestors, siblings, grandchildren and the partners’ unrelated branches. Choose **[name] and all descendants** for the complete branch.
+
 ## Starting heads and member details
 
 Pinosian and Bucannaw are inserted as partners once by the database migration, with no surnames or birthdays and gender **Unknown** until the clan supplies those details. The default tree opens on their family. Their records can be edited in the app; restarting or redeploying never resets those edits or duplicates the heads. Existing family data is preserved during upgrades.
@@ -118,7 +124,7 @@ In the print window choose **Paper size** (A4 or Letter) and **Page orientation*
 
 For about 500 descendants, use a booklet/PDF or print each main branch separately. A single ordinary sheet would make the names too small. The exact page count is displayed before printing; the compact layout substantially reduces the page count in the 500-descendant test fixture, including deliberately long names. That is a test example, not a fixed page count for the clan. Printing requires no paid service and does not alter family data.
 
-`GET /api/print?root=UUID` returns the entire selected branch; omitting root returns the whole clan. `npm run test:print` uses installed Chrome and an isolated 500-descendant database to check complete inclusion, desktop/mobile previews, page heights and A4/Letter PDF generation in portrait and landscape. Test PDFs are in `test-results/` and contain no real family data.
+`GET /api/print?root=UUID` returns the entire selected branch; add `&scope=immediate` for only the selected person, their partners and direct children; omitting root returns the whole clan. `npm run test:print` uses installed Chrome and an isolated 500-descendant database to check complete inclusion, desktop/mobile previews, page heights and A4/Letter PDF generation in portrait and landscape. Test PDFs are in `test-results/` and contain no real family data.
 
 ### Birth order controls
 

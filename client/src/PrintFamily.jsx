@@ -118,7 +118,14 @@ export default function PrintFamily({ api, person, close }) {
     setError("");
     try {
       setReport(
-        await api("/print" + (scope === "branch" ? "?root=" + person.id : "")),
+        await api(
+          "/print" +
+            (scope !== "all"
+              ? "?root=" +
+                person.id +
+                (scope === "immediate" ? "&scope=immediate" : "")
+              : ""),
+        ),
       );
     } catch (e) {
       setError(e.message);
@@ -139,7 +146,9 @@ export default function PrintFamily({ api, person, close }) {
           [...new Set(matches.map((p) => p.page))]
             .map((page) => "p. " + page)
             .join(", ")
-      : "No further descendants recorded";
+      : report.scope === "immediate"
+        ? "Immediate family only"
+        : "No further descendants recorded";
   };
   const details = (id) => {
     const p = byId.get(id);
@@ -148,7 +157,10 @@ export default function PrintFamily({ api, person, close }) {
         <strong>{p.full_name}</strong>
         <small>
           {p.birth_date ? "Born " + p.birth_date : "Birth date not recorded"} ·{" "}
-          {p.gender}
+          {p.gender} ·{" "}
+          {p.life_status && p.life_status !== "Unknown"
+            ? p.life_status
+            : "Status unknown"}
         </small>
       </>
     );
@@ -297,6 +309,12 @@ export default function PrintFamily({ api, person, close }) {
                 descendants
               </option>
             )}
+            {person && (
+              <option value="immediate">
+                {person.full_name || person.first_name || "This person"},
+                partner(s) and children only
+              </option>
+            )}
             <option value="all">Entire clan - all recorded families</option>
           </select>
         </label>
@@ -346,8 +364,10 @@ export default function PrintFamily({ api, person, close }) {
             <p role="status">
               {report.member_count} people · {report.families.length} family
               groups · {pages.length} pages.{" "}
-              {report.descendant_count !== null &&
-                `${report.descendant_count} descendants, plus the starting person and partners.`}
+              {report.scope === "immediate"
+                ? "Immediate family only; grandchildren and other branches are excluded."
+                : report.descendant_count !== null &&
+                  `${report.descendant_count} descendants, plus the starting person and partners.`}
             </p>
             <p>
               <strong>Print settings:</strong> {paper}, {orientation}, 100%

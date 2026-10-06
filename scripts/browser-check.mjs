@@ -39,6 +39,12 @@ try {
     "Bucannaw",
   );
   await expect(page.locator(".brand img")).toBeVisible();
+  await expect(page.locator(".person-detail > .life-status")).toHaveText(
+    "Deceased",
+  );
+  await expect(
+    page.getByRole("button", { name: "View Pinosian", exact: true }),
+  ).toContainText("Deceased");
   await expect(
     page.getByRole("button", { name: /Editor|Unlock|Login/i }),
   ).toHaveCount(0);
@@ -165,12 +171,22 @@ try {
   await phone.locator(".generation-children .tree-node").tap();
   await phone.getByRole("button", { name: "Edit", exact: true }).tap();
   await phone.getByLabel("First name").fill("Shared Family Member");
+  await phone
+    .getByLabel("Living status", { exact: true })
+    .selectOption("Living");
   await phone.getByRole("button", { name: "Save changes" }).tap();
   await expect(phone.locator(".person-detail h2")).toHaveText(
     "Shared Family Member",
   );
   await expect(page.locator(".generation-children").first()).toContainText(
     "Shared Family Member",
+    { timeout: 20000 },
+  );
+  await expect(phone.locator(".person-detail > .life-status")).toHaveText(
+    "Living",
+  );
+  await expect(page.locator(".generation-children").first()).toContainText(
+    "Living",
     { timeout: 20000 },
   );
   await page.reload();

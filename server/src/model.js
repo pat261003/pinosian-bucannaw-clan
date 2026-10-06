@@ -22,6 +22,7 @@ export const personSchema = z.object({
       }, "Enter a valid birth date that is not in the future.")
       .nullable(),
   ),
+  life_status: z.enum(["Living", "Deceased", "Unknown"]).default("Unknown"),
   gender: z.enum(["Male", "Female", "Other", "Unknown"]),
   birth_place: text(200),
   current_location: text(200),

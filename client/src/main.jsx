@@ -422,6 +422,11 @@ function App() {
                     <div>
                       <strong>{name(person)}</strong>
                       <span>{date(person.birth_date)}</span>
+                      <span className="life-status">
+                        {!person.life_status || person.life_status === "Unknown"
+                          ? "Living status unknown"
+                          : person.life_status}
+                      </span>
                       <small>
                         Generation {person.generation} ·{" "}
                         {person.branches.length}{" "}
@@ -593,6 +598,11 @@ function App() {
                     </div>
                   )}
                   <span className="tag">Generation {p.generation}</span>
+                  <span className="life-status">
+                    {p.life_status === "Unknown" || !p.life_status
+                      ? "Living status unknown"
+                      : p.life_status}
+                  </span>
                   <div className="facts">
                     <span>
                       <Calendar size={16} />
@@ -1041,6 +1051,7 @@ function PersonForm({ close, saved, focus, edit, relation, person, other }) {
         suffix: "",
         birth_date: "",
         gender: "",
+        life_status: "Unknown",
         birth_place: "",
         current_location: "",
         notes: "",
@@ -1262,6 +1273,20 @@ function PersonForm({ close, saved, focus, edit, relation, person, other }) {
                   {["Male", "Female", "Other", "Unknown"].map((s) => (
                     <option key={s}>{s}</option>
                   ))}
+                </select>
+              </label>
+              <label>
+                Living status
+                <select
+                  aria-label="Living status"
+                  value={values.life_status || "Unknown"}
+                  onChange={(e) =>
+                    setValues({ ...values, life_status: e.target.value })
+                  }
+                >
+                  <option value="Unknown">Unknown / Not confirmed</option>
+                  <option value="Living">Living</option>
+                  <option value="Deceased">Deceased</option>
                 </select>
               </label>
             </div>
