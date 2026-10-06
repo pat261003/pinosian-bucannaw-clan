@@ -81,20 +81,20 @@
 }
 .family-print-page h1 {
   font:
-    bold 24pt/1.25 Arial,
+    bold 15pt/1.25 Arial,
     sans-serif;
   margin: 12mm 0 5mm;
   overflow-wrap: anywhere;
 }
 .family-print-page h2 {
   font:
-    bold 16pt Arial,
+    bold 12pt Arial,
     sans-serif;
   margin: 6mm 0 4mm;
 }
 .family-print-page h3 {
   font:
-    bold 12pt Arial,
+    bold 10pt Arial,
     sans-serif;
   margin: 3mm 0;
 }
@@ -125,7 +125,7 @@
 }
 .family-print-page strong {
   display: block;
-  font-size: 12pt;
+  font-size: 10pt;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
